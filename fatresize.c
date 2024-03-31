@@ -450,6 +450,24 @@ static int partition_warn_busy(PedPartition *part) {
   return 1;
 }
 
+int parse_device_spec(char *devname)
+{
+		char *partno = devname + strlen(devname) - 1; /* last character */
+		while (*partno && isdigit(*partno))
+				partno--;
+		partno++;
+		if ((opts.pnum > 0) && (strlen(partno) > 0)) {
+				ped_exception_throw(PED_EXCEPTION_ERROR, PED_EXCEPTION_CANCEL,
+														"Don't specify partition number with -n and in device name!\n");
+				return -1;
+		}
+		if (strlen(partno) > 0)
+				opts.pnum = atoi(partno);
+		opts.fullpath = strndup(devname,strlen(devname));
+		opts.device = strndup(devname,strlen(devname)-strlen(partno));
+		return 0;
+}
+
 int main(int argc, char **argv) {
   int opt;
 
@@ -491,7 +509,8 @@ int main(int argc, char **argv) {
     switch (opt) {
       case 1:
         if (!opts.device) {
-          get_device(optarg);
+						if (parse_device_spec(optarg) == -1)
+								exit(1);
         } else {
           usage(1);
         }
