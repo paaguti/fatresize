@@ -453,8 +453,15 @@ static int partition_warn_busy(PedPartition *part) {
 int parse_device_spec(char *devname)
 {
 		char *partno = devname + strlen(devname) - 1; /* last character */
-		while (*partno && isdigit(*partno))
+		while (*partno && isdigit(*partno)) {
+				/* Don't try to go *before* the first character */
+				if (partno == devname) {
+						ped_exception_throw(PED_EXCEPTION_ERROR, PED_EXCEPTION_CANCEL,
+																"Bugous device name!\n");
+						return -1;
+				}
 				partno--;
+		}
 		partno++;
 		if ((opts.pnum > 0) && (strlen(partno) > 0)) {
 				ped_exception_throw(PED_EXCEPTION_ERROR, PED_EXCEPTION_CANCEL,
